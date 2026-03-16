@@ -237,7 +237,7 @@
     }
   }
 
-  function saveState() {
+  async function saveState() {
     state.updatedAt = new Date().toISOString();
     const snapshot = {
       activeScreen: state.activeScreen,
@@ -255,30 +255,52 @@
       focus: state.focus
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-    syncStateToServer(snapshot);
+    
+    if (cloudSyncEnabled && supabase) {
+      if (syncInFlight) {
+        pendingSync = true;
+        return;
+      }
+      syncInFlight = true;
+      try {
+        const { error } = await supabase
+          .from("user_states")
+          .upsert({ 
+            user_id: USER_ID, 
+            state_data: snapshot, 
+            updated_at: state.updatedAt 
+          });
+        if (error) throw error;
+      } catch (err) {
+        console.warn("Cloud sync error:", err.message);
+      } finally {
+        syncInFlight = false;
+        if (pendingSync) {
+          pendingSync = false;
+          saveState();
+        }
+      }
+    }
   }
 
-  async function syncStateToServer(snapshot) {
-    if (typeof fetch === "undefined") return;
-    if (syncInFlight) {
-      pendingSync = true;
-      return;
-    }
-    syncInFlight = true;
+  async function syncFromCloud() {
+    if (!cloudSyncEnabled || !supabase) return;
     try {
-      await fetch("/api/state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId: CLIENT_ID, state: snapshot })
-      });
-    } catch (error) {
-      console.warn("Не удалось синхронизировать состояние Fligy:", error);
-    } finally {
-      syncInFlight = false;
-      if (pendingSync) {
-        pendingSync = false;
-        syncStateToServer(JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"));
+      const { data, error } = await supabase
+        .from("user_states")
+        .select("state_data")
+        .eq("user_id", USER_ID)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error; // PGRST116 is "no rows found"
+      
+      if (data && data.state_data) {
+        state = normalize(data.state_data);
+        render();
+        console.log("Progress synced from cloud.");
       }
+    } catch (err) {
+      console.error("Cloud fetch error:", err.message);
     }
   }
 
