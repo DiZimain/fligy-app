@@ -1,0 +1,8 @@
+server.py
+start_local.ps1
+*.log
+state.json
+__pycache__/
+.env
+MVP_CONCEPT.md
+perfume_catalog*
