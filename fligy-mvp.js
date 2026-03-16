@@ -2,9 +2,14 @@
   "use strict";
 
   const STORAGE_KEY = "fligy.mvp.v7";
+  const SUPABASE_URL = "https://vdglttonekpigykmdrgj.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZ2x0dG9uZWtwaWd5a21kcmdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjI5OTAsImV4cCI6MjA4OTIzODk5MH0.w3RwdvYX-ynz0Ov2H7Wl8YchjhjWAPKktQzf4zU5LE0";
+  const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
   const CLIENT_KEY = "fligy.client.id.v3";
   const RANKS = ["C", "B", "A", "S", "SS", "SSS"];
   const TODAY = dateKey();
+  const TG_USER = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) ? window.Telegram.WebApp.initDataUnsafe.user : null;
+  const USER_ID = TG_USER ? `tg-${TG_USER.id}` : ensureClientId();
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -102,6 +107,7 @@
   let focusInterval = null;
   let hatchTimer = null;
   let hatchPreviewActive = false;
+  let cloudSyncEnabled = !!supabase;
 
   function uid() {
     return `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -962,5 +968,5 @@
     if (state.focus.remainingSeconds <= 0) completeFocusSession();
     else startFocusTicker();
   }
-  hydrateFromServer();
+  syncFromCloud();
 })();
