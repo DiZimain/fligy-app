@@ -893,19 +893,22 @@
       saveState();
       render();
     }));
-    refs.missActionBtn.addEventListener("click", () => {
-      state.activeScreen = "tasks";
-      saveState();
-      render();
-    });
-    refs.previewHatchBtn.addEventListener("click", previewHatch);
-    refs.startFocusBtn.addEventListener("click", startFocusTimer);
-    refs.advanceFocusBtn.addEventListener("click", pauseFocusTimer);
-    refs.completeFocusBtn.addEventListener("click", resetFocusTimer);
-    refs.taskForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      addAction(refs.actionTypeInput.value, refs.actionTitleInput.value, refs.actionNoteInput.value, refs.actionTriggerInput.value);
-    });
+    if (refs.missActionBtn) {
+      refs.missActionBtn.addEventListener("click", () => {
+        state.activeScreen = "tasks";
+        saveState();
+        render();
+      });
+    }
+    if (refs.startFocusBtn) refs.startFocusBtn.addEventListener("click", startFocusTimer);
+    if (refs.advanceFocusBtn) refs.advanceFocusBtn.addEventListener("click", pauseFocusTimer);
+    if (refs.completeFocusBtn) refs.completeFocusBtn.addEventListener("click", resetFocusTimer);
+    if (refs.taskForm) {
+      refs.taskForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        addAction(refs.actionTypeInput.value, refs.actionTitleInput.value, refs.actionNoteInput.value, refs.actionTriggerInput.value);
+      });
+    }
     refs.quickAddButtons.forEach((button) => button.addEventListener("click", () => addAction(button.dataset.templateType, button.dataset.templateTitle, button.dataset.templateNote || "", button.dataset.templateTrigger || "Гибко")));
     window.addEventListener("beforeunload", stopFocusTicker);
   }
