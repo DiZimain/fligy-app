@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Fligy - Твое Убежище</title>
+  
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <link rel="stylesheet" href="fligy-mvp.css">
+</head>
+<body>
+  <main class="app-frame">
+    <header class="resource-bar">
+      <div class="resource-pill">
+        <span class="resource-icon coin"></span>
+        <div>
+          <span class="resource-label">Монеты</span>
+          <strong id="coinsValue">0</strong>
+        </div>
+      </div>
+      <div class="resource-pill">
+        <span class="resource-icon crystal"></span>
+        <div>
+          <span class="resource-label">Рост</span>
+          <strong id="xpValue">0 / 100 XP</strong>
+        </div>
+      </div>
+      <div class="resource-pill danger-pill">
+        <span class="resource-icon flame"></span>
+        <div>
+          <span class="resource-label">Стрик</span>
+          <strong id="streakValue">0 дней</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="screen is-active" data-screen="sanctuary">
+      <section class="summon-stage" id="petStage" data-state="stable" data-growth="egg">
+        <div class="stage-banner">
+          <span class="banner-stars">★</span>
+          <strong id="warningChip">Под скорлупой зреет существо</strong>
+          <span class="banner-stars">★</span>
+        </div>
+
+        <div class="stage-scene">
+          <div class="scene-bg"></div>
+          <div class="scene-particles"></div>
+
+          <div class="pet-wrap">
+            <div class="pet-aura"></div>
+            <div class="pet-visual">
+              <div class="egg-shell">
+                <div class="egg-crack"></div>
+              </div>
+              <img class="pet-image" id="petImage" alt="Дракон Fligy">
+              <div class="pet-avatar" aria-hidden="true">
+                <div class="pet-horns"></div>
+                <div class="pet-body"></div>
+                <div class="pet-wing pet-wing-left"></div>
+                <div class="pet-wing pet-wing-right"></div>
+                <div class="pet-eye pet-eye-left"></div>
+                <div class="pet-eye pet-eye-right"></div>
+                <div class="pet-mouth"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-copy">
+            <span class="identity-pill" id="creatureIdentity">Случайный вид: Искролис</span>
+            <h1 id="petMoodTitle">Яйцо еще спит</h1>
+            <p id="petMoodText">Твой спутник начинает путь как яйцо. Каждый активный день приближает трещины, свет и первое вылупление.</p>
+            <div class="star-row" id="growthRow">○ ○ ○ ○</div>
+            <p class="growth-hint" id="growthHint">Активных дней: 0 из 5 до первой формы</p>
+          </div>
+        </div>
+
+        <div class="status-deck">
+          <article class="status-card">
+            <span>Энергия</span>
+            <strong id="energyLabel">72%</strong>
+            <div class="bar-track"><div class="bar-fill energy" id="energyBar"></div></div>
+          </article>
+          <article class="status-card">
+            <span>Настроение</span>
+            <strong id="moodLabel">68%</strong>
+            <div class="bar-track"><div class="bar-fill mood" id="moodBar"></div></div>
+          </article>
+          <article class="status-card">
+            <span>Доверие</span>
+            <strong id="trustLabel">70%</strong>
+            <div class="bar-track"><div class="bar-fill trust" id="trustBar"></div></div>
+          </article>
+        </div>
+
+        <div class="primary-action-box">
+          <div>
+            <span class="small-label">Главная цель дня</span>
+            <h2 id="statusMode">Дать яйцу первый прогресс</h2>
+            <p id="dangerText">Без реальных действий существо не продвинется к вылуплению, а убежище начнет слабеть.</p>
+          </div>
+          <div class="primary-action-meta">
+            <span class="meta-pill" id="stageValue">Этап: Яйцо</span>
+            <span class="meta-pill" id="rewardHint">До бонуса: 4 действия</span>
+          </div>
+          <div class="primary-action-buttons">
+            <button class="main-cta" id="missActionBtn" type="button">Создать первую карточку</button>
+            <button class="shop-action secondary-cta" id="previewHatchBtn" type="button">Показать вылупление</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-overview wood-panel">
+        <div class="section-head">
+          <div>
+            <span class="small-label">Сводка дня</span>
+            <h3>Что происходит сегодня</h3>
+          </div>
+        </div>
+        <div class="status-deck compact-deck">
+          <article class="status-card">
+            <span>Сделано сегодня</span>
+            <strong id="todayDoneValue">0</strong>
+          </article>
+          <article class="status-card">
+            <span>Осталось</span>
+            <strong id="todayRemainingValue">4</strong>
+          </article>
+          <article class="status-card">
+            <span>День активен</span>
+            <strong id="todayActiveValue">Нет</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="perfect-day wood-panel">
+        <div class="section-head">
+          <div>
+            <span class="small-label">Идеальный день</span>
+            <h3>Как ускорить рост существа</h3>
+          </div>
+        </div>
+        <p class="focus-copy" id="perfectDayHint">Закрой хотя бы одну задачу, одну привычку и один проект или фокус-сессию.</p>
+        <div class="meta-pill wide-pill" id="perfectDayStatus">Пока не собран</div>
+      </section>
+
+    </section>
+
+    <section class="screen" data-screen="tasks">
+      <section class="task-builder wood-panel">
+        <div class="section-head">
+          <div>
+            <span class="small-label">Свои действия</span>
+            <h3>Собери карточки дня</h3>
+          </div>
+        </div>
+
+        <form class="task-form" id="taskForm">
+          <select id="actionTypeInput">
+            <option value="Задача">Задача</option>
+            <option value="Привычка">Привычка</option>
+            <option value="Проект">Проект</option>
+          </select>
+          <select id="actionTriggerInput">
+            <option value="Утро">Утро</option>
+            <option value="День">День</option>
+            <option value="Вечер">Вечер</option>
+            <option value="Гибко">Гибко</option>
+          </select>
+          <input id="actionTitleInput" type="text" maxlength="60" placeholder="Например: сходить в спортзал">
+          <input id="actionNoteInput" type="text" maxlength="90" placeholder="Короткая заметка, если нужно">
+          <button class="shop-action secondary-cta" type="submit">Добавить</button>
+        </form>
+
+        <div class="quick-add-row">
+          <button class="chip-btn" type="button" data-template-type="Привычка" data-template-title="Сходить в спортзал" data-template-note="Силовая, кардио или просто выйти и сделать тренировку" data-template-trigger="Утро">
+            Спортзал
+          </button>
+          <button class="chip-btn" type="button" data-template-type="Привычка" data-template-title="Прочитать 30 минут" data-template-note="Книга, статья или учебный материал без отвлечений" data-template-trigger="Вечер">
+            Читать 30 минут
+          </button>
+          <button class="chip-btn" type="button" data-template-type="Проект" data-template-title="Поработать над проектом" data-template-note="Сделать заметный шаг, а не просто подумать о нем" data-template-trigger="День">
+            Проект
+          </button>
+        </div>
+      </section>
+
+      <section class="action-board">
+        <div class="section-head">
+          <div>
+            <span class="small-label">Нейрокарточки</span>
+            <h3>Квесты, баффы и ранги</h3>
+          </div>
+          <span class="meta-pill" id="doneCount">0 / 4</span>
+        </div>
+        <div class="action-grid" id="actionList"></div>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="focus">
+      <article class="wood-panel focus-screen">
+        <div class="section-head">
+          <div>
+            <span class="small-label">Фокус</span>
+            <h3>Таймер концентрации</h3>
+          </div>
+          <span class="meta-pill" id="focusRuns">Сессий: 0</span>
+        </div>
+
+        <p class="focus-copy" id="focusStatus">Выбери длительность и запусти спокойную сессию концентрации. Здесь только таймер, ритм и награда за завершение.</p>
+
+        <div class="focus-timer-shell">
+          <div class="focus-ring" id="focusTimerRing">
+            <div class="focus-core">
+              <span class="small-label">Осталось</span>
+              <strong id="focusTimerValue">25:00</strong>
+              <p class="focus-copy" id="focusTimerNote">Стартовая сессия на 25 минут.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="focus-route-list focus-preset-list" id="focusRouteList"></div>
+
+        <div class="focus-command wood-panel">
+          <div class="section-head">
+            <div>
+              <span class="small-label">Текущая сессия</span>
+              <h3 id="focusCommandTitle">Выбери длительность</h3>
+            </div>
+            <span class="meta-pill" id="focusProgressText">0 / 1</span>
+          </div>
+          <p class="focus-copy" id="focusCommandText">Это чистый таймер для спокойной и ровной работы.</p>
+          <div class="focus-actions">
+            <button class="main-cta" id="startFocusBtn" type="button">Старт</button>
+            <button class="shop-action secondary-cta" id="advanceFocusBtn" type="button">Пауза</button>
+            <button class="shop-action secondary-cta" id="completeFocusBtn" type="button">Сброс</button>
+          </div>
+        </div>
+
+        <div class="focus-bonuses">
+          <article class="status-card">
+            <span>Награда</span>
+            <strong>+12 монет</strong>
+          </article>
+          <article class="status-card">
+            <span>XP</span>
+            <strong>+14 XP</strong>
+          </article>
+          <article class="status-card">
+            <span>Эффект</span>
+            <strong>+ритм дня</strong>
+          </article>
+        </div>
+      </article>
+    </section>
+
+    <section class="screen" data-screen="shop">
+      <section class="support-row single-column">
+        <article class="wood-panel">
+          <div class="section-head">
+            <div>
+              <span class="small-label">Лавка</span>
+              <h3>Поддержка питомца</h3>
+            </div>
+          </div>
+          <div class="shop-grid" id="shopList"></div>
+        </article>
+
+        <article class="wood-panel">
+          <div class="section-head">
+            <div>
+              <span class="small-label">План спасения</span>
+              <h3>Если день пошел не туда</h3>
+            </div>
+            <span class="meta-pill" id="riskLabel">Риск: средний</span>
+          </div>
+          <ul class="recovery-list">
+            <li>Закрыть 1 важную задачу до конца дня</li>
+            <li>Сделать 1 базовую привычку без пропуска</li>
+            <li>Удержать серию еще 24 часа</li>
+          </ul>
+        </article>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="progress">
+      <article class="wood-panel progress-screen">
+        <div class="section-head">
+          <div>
+            <span class="small-label">Эволюция</span>
+            <h3>Рост твоего существа</h3>
+          </div>
+        </div>
+
+        <div class="evolution-card">
+          <div class="evolution-stage">
+            <span class="small-label">Текущая форма</span>
+            <strong id="evolutionStage">Яйцо</strong>
+            <p id="evolutionText">Существо еще скрыто в скорлупе. Ему нужны активные дни, чтобы раскрыться.</p>
+          </div>
+          <div class="weekly-grid" id="weeklyGrid"></div>
+        </div>
+
+        <div class="progress-metrics">
+          <article class="status-card">
+            <span>Активных дней</span>
+            <strong id="activeDaysValue">0</strong>
+          </article>
+          <article class="status-card">
+            <span>Выполнено действий</span>
+            <strong id="totalActionsDone">0</strong>
+          </article>
+          <article class="status-card">
+            <span>Монет заработано</span>
+            <strong id="earnedCoins">0</strong>
+          </article>
+        </div>
+      </article>
+    </section>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn is-active" type="button" data-nav="sanctuary">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Главная</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="tasks">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>Задачи</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="focus">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Фокус</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="shop">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>Лавка</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="progress">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        <span>Рост</span>
+      </button>
+    </nav>
+  </main>
+
+  <script src="fligy-mvp.js"></script>
+</body>
+</html>
+
