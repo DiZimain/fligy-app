@@ -1350,7 +1350,11 @@ body::before {
 }
 
 @media (max-width: 380px) {
-  .resource-bar,
+  .resource-bar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
   .status-deck,
   .task-form,
   .quick-add-row,
@@ -1377,7 +1381,7 @@ body::before {
 @media (max-width: 460px) {
   .app-frame {
     width: 100%;
-    padding: 10px 10px 20px;
+    padding: 10px 10px 140px;
   }
 
   .resource-pill {
