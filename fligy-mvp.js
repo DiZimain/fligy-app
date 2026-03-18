@@ -188,7 +188,7 @@
       totalActionsDone: 0,
       dailyDone: {},
       stats: { energy: 70, mood: 70, trust: 70 },
-      profile: { creatureId: CREATURES[Math.floor(Math.random() * CREATURES.length)].id, activeDays: [], hatched: false },
+      profile: { creatureId: CREATURES[Math.floor(Math.random() * CREATURES.length)].id, activeDays: [], hatched: false, telegramId: null },
       actions: [],
       focus: { selectedPresetId: "classic", running: false, remainingSeconds: 25 * 60, endsAt: null, completedSessions: 0, lastCompletedOn: null },
       dailyQuests: [],
@@ -223,7 +223,8 @@
       profile: {
         creatureId,
         activeDays: Array.isArray(raw.profile?.activeDays) ? [...new Set(raw.profile.activeDays)].sort() : [],
-        hatched: Boolean(raw.profile?.hatched || maxDailyDone(raw.dailyDone) >= 3 || (Array.isArray(raw.profile?.activeDays) && raw.profile.activeDays.length >= 5))
+        hatched: Boolean(raw.profile?.hatched || maxDailyDone(raw.dailyDone) >= 3 || (Array.isArray(raw.profile?.activeDays) && raw.profile.activeDays.length >= 5)),
+        telegramId: raw.profile?.telegramId || base.profile.telegramId
       },
       actions: Array.isArray(raw.actions) ? raw.actions.map((action) => buildAction(action)) : [],
       focus: { ...base.focus, ...(raw.focus || {}) },
@@ -1101,6 +1102,13 @@
 
   initTelegram();
   bindEvents();
+  
+  // Capture TG user ID for notifications
+  if (TG_USER && state.profile.telegramId !== String(TG_USER.id)) {
+    state.profile.telegramId = String(TG_USER.id);
+    saveState();
+  }
+
   render();
   if (state.focus.running && state.focus.endsAt) {
     syncFocusRemaining();
