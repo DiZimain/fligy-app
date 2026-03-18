@@ -1433,3 +1433,6 @@ body::before {
     height: 186px;
   }
 }
+
+/* Shop UI Adjustments */
+.shop-grid { display: grid; gap: 12px; }

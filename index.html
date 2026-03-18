@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Fligy - Твое Убежище</title>
+  <title>Flygy — Преврати дела в игру</title>
   
   <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="fligy-mvp.css">
+  <link rel="stylesheet" href="fligy-mvp.css?v=2">
 </head>
 <body>
   <main class="app-frame">
@@ -37,7 +37,7 @@
       </div>
     </header>
 
-    <section class="screen is-active" data-screen="sanctuary">
+    <section class="screen is-active" data-screen="home">
       <section class="summon-stage" id="petStage" data-state="stable" data-growth="egg">
         <div class="stage-banner">
           <span class="banner-stars">★</span>
@@ -55,7 +55,7 @@
               <div class="egg-shell">
                 <div class="egg-crack"></div>
               </div>
-              <img class="pet-image" id="petImage" alt="Дракон Fligy">
+              <img class="pet-image" id="petImage" alt="Дракон Flygy">
               <div class="pet-avatar" aria-hidden="true">
                 <div class="pet-horns"></div>
                 <div class="pet-body"></div>
@@ -99,7 +99,7 @@
           <div>
             <span class="small-label">Главная цель дня</span>
             <h2 id="statusMode">Дать яйцу первый прогресс</h2>
-            <p id="dangerText">Без реальных действий существо не продвинется к вылуплению, а убежище начнет слабеть.</p>
+            <p id="dangerText">Без реальных действий существо не продвинется к вылуплению, а темп будет потерян.</p>
           </div>
           <div class="primary-action-meta">
             <span class="meta-pill" id="stageValue">Этап: Яйцо</span>
@@ -132,6 +132,16 @@
             <strong id="todayActiveValue">Нет</strong>
           </article>
         </div>
+      </section>
+
+      <section class="daily-quests wood-panel">
+        <div class="section-head">
+          <div>
+            <span class="small-label">События дня</span>
+            <h3>Ежедневные квесты</h3>
+          </div>
+        </div>
+        <div class="action-grid" id="dailyQuestsContainer"></div>
       </section>
 
       <section class="perfect-day wood-panel">
@@ -320,7 +330,7 @@
     </section>
 
     <nav class="bottom-nav">
-      <button class="nav-btn is-active" type="button" data-nav="sanctuary">
+      <button class="nav-btn is-active" type="button" data-nav="home">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </button>
       <button class="nav-btn" type="button" data-nav="tasks">

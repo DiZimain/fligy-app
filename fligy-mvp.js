@@ -15,16 +15,18 @@
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
   const CREATURES = [
-    { id: "emberfox", name: "Искролис", flavor: "огненный", image: "image/1.png", colors: { primary: "#ff8a33", secondary: "#d93e17", aura: "rgba(255, 180, 86, 0.82)", eggPrimary: "#ffe9b7", eggSecondary: "#d9b46b" } },
-    { id: "mosscat", name: "Мохокот", flavor: "лесной", image: "image/2.png", colors: { primary: "#7fd86b", secondary: "#3a8f4a", aura: "rgba(114, 221, 142, 0.78)", eggPrimary: "#eef3c7", eggSecondary: "#b7ca7a" } },
-    { id: "stormling", name: "Грозлик", flavor: "электрический", image: "image/3.png", colors: { primary: "#7bbcff", secondary: "#3e69d8", aura: "rgba(111, 184, 255, 0.8)", eggPrimary: "#dde9ff", eggSecondary: "#8eb1f0" } },
-    { id: "mistcrow", name: "Туманник", flavor: "лунный", image: "image/4.png", colors: { primary: "#d9b4ff", secondary: "#8f48d2", aura: "rgba(203, 151, 255, 0.76)", eggPrimary: "#f0e6ff", eggSecondary: "#c9aae8" } }
+    { id: "emberfox", name: "Flygy", flavor: "огненный", image: "image/1.png", colors: { primary: "#ff8a33", secondary: "#d93e17", aura: "rgba(255, 180, 86, 0.82)", eggPrimary: "#ffe9b7", eggSecondary: "#d9b46b" } },
+    { id: "mosscat", name: "Flygy", flavor: "лесной", image: "image/2.png", colors: { primary: "#7fd86b", secondary: "#3a8f4a", aura: "rgba(114, 221, 142, 0.78)", eggPrimary: "#eef3c7", eggSecondary: "#b7ca7a" } },
+    { id: "stormling", name: "Flygy", flavor: "электрический", image: "image/3.png", colors: { primary: "#7bbcff", secondary: "#3e69d8", aura: "rgba(111, 184, 255, 0.8)", eggPrimary: "#dde9ff", eggSecondary: "#8eb1f0" } },
+    { id: "mistcrow", name: "Flygy", flavor: "лунный", image: "image/4.png", colors: { primary: "#d9b4ff", secondary: "#8f48d2", aura: "rgba(203, 151, 255, 0.76)", eggPrimary: "#f0e6ff", eggSecondary: "#c9aae8" } }
   ];
 
   const SHOP_ITEMS = [
     { id: "berries", name: "Светящиеся ягоды", text: "Поднимают настроение, немного восстанавливают силы и помогают мягко вернуться в ритм.", cost: 20 },
     { id: "nest", name: "Теплое гнездо", text: "Добавляет устойчивость и помогает дракону чувствовать себя в безопасности даже в тяжелый день.", cost: 45 },
-    { id: "rune", name: "Рунический талисман", text: "Дает мягкий бонус к опыту и доверию, когда нужно вернуться в рабочий ритм.", cost: 60 }
+    { id: "rune", name: "Рунический талисман", text: "Дает мягкий бонус к опыту и доверию, когда нужно вернуться в рабочий ритм.", cost: 60 },
+    { id: "indulgence", name: "Индульгенция от риска", text: "Снимает штраф за пропущенный день активности и сохраняет серию на сутки.", cost: 120 },
+    { id: "xp_boost", name: "Усилитель опыта", text: "Дает стабильный буст к получению опыта от любых задач на весь день.", cost: 150 }
   ];
 
   const FOCUS_PRESETS = [
@@ -38,6 +40,13 @@
     "Привычка": { instantBuffs: ["+стабильность", "+ровное состояние"], longBuffs: ["+ритм", "+дисциплина"], reward: { coins: 8, xp: 8, mood: 4, energy: 5, trust: 2 }, targets: ["5 минут", "7 минут", "10 минут", "12 минут", "15 минут", "20 минут"] },
     "Проект": { instantBuffs: ["+ощущение прогресса", "+ясность"], longBuffs: ["+мастерство", "+уверенность"], reward: { coins: 18, xp: 14, mood: 5, energy: 4, trust: 4 }, targets: ["15 минут", "25 минут", "35 минут", "45 минут", "60 минут", "90 минут"] }
   };
+
+  const DAILY_QUESTS_POOL = [
+    { id: "q_focus1", title: "Войти в поток", text: "Завершить 1 любую фокус-сессию.", goalType: "focus", targetVal: 1, reward: { coins: 20, xp: 15 } },
+    { id: "q_task2", title: "Двойной удар", text: "Закрыть 2 любые задачи (не проекты/привычки).", goalType: "Задача", targetVal: 2, reward: { coins: 15, xp: 20 } },
+    { id: "q_habit3", title: "Фундамент дня", text: "Выполнить 3 любые карточки за день.", goalType: "any_action", targetVal: 3, reward: { coins: 30, xp: 25 } },
+    { id: "q_project1", title: "Шаг вперед", text: "Продвинуться по любой карточке типа 'Проект'.", goalType: "Проект", targetVal: 1, reward: { coins: 25, xp: 15 } }
+  ];
 
   const refs = {
     screens: $$("[data-screen]"),
@@ -169,7 +178,7 @@
 
   function createState() {
     return {
-      activeScreen: "sanctuary",
+      activeScreen: "home",
       lastSeenDate: today(),
       updatedAt: new Date().toISOString(),
       coins: 0,
@@ -181,7 +190,9 @@
       stats: { energy: 70, mood: 70, trust: 70 },
       profile: { creatureId: CREATURES[Math.floor(Math.random() * CREATURES.length)].id, activeDays: [], hatched: false },
       actions: [],
-      focus: { selectedPresetId: "classic", running: false, remainingSeconds: 25 * 60, endsAt: null, completedSessions: 0, lastCompletedOn: null }
+      focus: { selectedPresetId: "classic", running: false, remainingSeconds: 25 * 60, endsAt: null, completedSessions: 0, lastCompletedOn: null },
+      dailyQuests: [],
+      inventory: []
     };
   }
 
@@ -215,15 +226,38 @@
         hatched: Boolean(raw.profile?.hatched || maxDailyDone(raw.dailyDone) >= 3 || (Array.isArray(raw.profile?.activeDays) && raw.profile.activeDays.length >= 5))
       },
       actions: Array.isArray(raw.actions) ? raw.actions.map((action) => buildAction(action)) : [],
-      focus: { ...base.focus, ...(raw.focus || {}) }
+      focus: { ...base.focus, ...(raw.focus || {}) },
+      dailyQuests: Array.isArray(raw.dailyQuests) ? raw.dailyQuests.filter(q => q && q.id) : [],
+      inventory: Array.isArray(raw.inventory) ? raw.inventory : []
     };
-    if (!FOCUS_PRESETS.some((preset) => preset.id === next.focus.selectedPresetId)) next.focus.selectedPresetId = "classic";
-    if (next.lastSeenDate !== today()) {
+    
+    const isNewDay = next.lastSeenDate !== today();
+    if (isNewDay) {
+      // Calculate missed days for stat decay
+      const todayDate = dateFromKey(today());
+      const lastSeen = dateFromKey(next.lastSeenDate);
+      const diffTime = Math.abs(todayDate - lastSeen);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const decay = diffDays * 15; // Lose 15 stats per day absent
+      next.stats.energy = clamp(next.stats.energy - decay, 0, 100);
+      next.stats.mood = clamp(next.stats.mood - decay, 0, 100);
+      next.stats.trust = clamp(next.stats.trust - (decay * 0.5), 0, 100);
+
       next.lastSeenDate = today();
       next.focus.running = false;
       next.focus.endsAt = null;
       next.focus.remainingSeconds = presetDuration(next.focus.selectedPresetId);
+      
+      // Generate new daily quests
+      const pool = [...DAILY_QUESTS_POOL].sort(() => 0.5 - Math.random());
+      next.dailyQuests = pool.slice(0, 2).map(q => ({ ...q, progress: 0, completed: false }));
+    } else if (next.dailyQuests.length === 0) {
+      // Fallback if empty (e.g. migration)
+      const pool = [...DAILY_QUESTS_POOL].sort(() => 0.5 - Math.random());
+      next.dailyQuests = pool.slice(0, 2).map(q => ({ ...q, progress: 0, completed: false }));
     }
+    
     return next;
   }
 
@@ -232,7 +266,7 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? normalize(JSON.parse(raw)) : createState();
     } catch (error) {
-      console.error("Не удалось загрузить состояние Fligy:", error);
+      console.error("Не удалось загрузить состояние Flygy:", error);
       return createState();
     }
   }
@@ -252,7 +286,9 @@
       stats: state.stats,
       profile: state.profile,
       actions: state.actions,
-      focus: state.focus
+      focus: state.focus,
+      dailyQuests: state.dailyQuests,
+      inventory: state.inventory
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
     
@@ -331,7 +367,7 @@
         render();
       }
     } catch (error) {
-      console.warn("Не удалось получить серверное состояние Fligy:", error);
+      console.warn("Не удалось получить серверное состояние Flygy:", error);
     }
   }
 
@@ -389,7 +425,7 @@
     const doneToday = completedCardsToday();
     if (stage === "egg") return { title: "Яйцо еще спит", text: "Внутри зреет жизнь. Твоему спутнику нужна энергия твоих действий. Выполни 3 карточки сегодня, и ты увидишь чудо.", banner: `Под скорлупой зреет ${current.name}`, goal: "Выполнить 3 карточки за день", hint: `Сегодня выполнено: ${doneToday} из 3`, progress: doneToday === 0 ? "○ ○ ○" : doneToday === 1 ? "★ ○ ○" : "★ ★ ○" };
     if (stage === "cracked") return { title: "Скорлупа трескается", text: "Отличный темп. Остался последний рывок: закрой третью карточку и запусти вылупление.", banner: `${current.name} начинает просыпаться`, goal: "Выполнить 3 карточки за день", hint: `Сегодня выполнено: ${doneToday} из 3`, progress: "★ ★ ○ ○" };
-    if (stage === "hatched") return { title: `${current.name} вылупился`, text: `Теперь твой ${current.flavor} спутник уже рядом. Продолжай действия, чтобы укреплять его форму и характер.`, banner: `${current.name} появился в убежище`, goal: "Держать ритм и кормить рост карточками", hint: `Активных дней после вылупления: ${days}`, progress: growthDots() };
+    if (stage === "hatched") return { title: `${current.name} вылупился`, text: `Теперь твой ${current.flavor} спутник уже рядом. Продолжай действия, чтобы укреплять его форму и характер.`, banner: `${current.name} теперь с тобой`, goal: "Держать ритм и кормить рост карточками", hint: `Активных дней после вылупления: ${days}`, progress: growthDots() };
     return { title: `${current.name} закрепил форму`, text: "Существо уже не просто выживает, а становится полноценным компаньоном продуктивности.", banner: `${current.name} держит взрослую форму`, goal: "Сохранять ритм и прокачивать ранги карточек", hint: `Активных дней: ${days}. Следующий шаг - редкие формы и коллекция.`, progress: "★ ★ ★ ★" };
   }
 
@@ -603,11 +639,8 @@
       const reward = qualityReward(action);
       const label = isDoneToday(action) ? "Сегодня уже закрыто" : "Закрыть квест";
       return `<article class="action-card">
-        <div class="action-card-head"><div><span class="action-type">${escapeHtml(action.type)}</span><div class="action-copy"><h4>${escapeHtml(action.title)}</h4><p>${escapeHtml(action.note || "Без заметки")}</p></div></div><div class="action-rank">Ранг ${rankLabel(action)}</div></div>
-        <div class="action-meta-line"><span class="mini-pill">Триггер: ${escapeHtml(action.trigger)}</span><span class="mini-pill">Сложность: ${escapeHtml(targetLabel(action))}</span></div>
+        <div class="action-card-head"><div><span class="action-type">${escapeHtml(action.type)}</span><div class="action-copy"><h4>${escapeHtml(action.title)}</h4><p>${escapeHtml(action.note || "Без заметки")}</p></div></div></div>
         <div class="action-progress"><span class="buff-label">Прогресс ранга</span><div class="progress-cells">${progressCells(action)}</div></div>
-        <div class="buff-block"><span class="buff-label">Краткие баффы</span><div class="buff-row">${action.instantBuffs.map((buff) => `<span class="buff-chip">${escapeHtml(buff)}</span>`).join("")}</div></div>
-        <div class="buff-block"><span class="buff-label">Долгие баффы</span><div class="buff-row">${action.longBuffs.map((buff) => `<span class="mini-pill">${escapeHtml(buff)}</span>`).join("")}</div></div>
         <div class="quality-row"><span class="buff-label">Качество</span><select class="quality-select" data-quality-id="${action.id}" ${isDoneToday(action) ? "disabled" : ""}>${Array.from({ length: 10 }, (_, index) => index + 1).map((quality) => `<option value="${quality}" ${quality === action.quality ? "selected" : ""}>${quality}/10</option>`).join("")}</select><span class="mini-pill">${action.quality >= 5 ? "Неидеально тоже считается" : "Даже слабый шаг лучше нуля"}</span></div>
         <div class="action-reward">Награда сейчас: +${reward.coins} монет • +${reward.xp} XP</div>
         <div class="action-footer"><button class="shop-action ${isDoneToday(action) ? "secondary-cta" : ""}" type="button" data-complete-id="${action.id}" ${disabled ? "disabled" : ""}>${label}</button>${action.removable ? `<button class="shop-action remove-btn" type="button" data-remove-id="${action.id}">×</button>` : ""}</div>
@@ -616,10 +649,19 @@
     refs.actionList.querySelectorAll("[data-complete-id]").forEach((button) => button.addEventListener("click", () => completeAction(button.dataset.completeId)));
     refs.actionList.querySelectorAll("[data-remove-id]").forEach((button) => button.addEventListener("click", () => removeAction(button.dataset.removeId)));
     refs.actionList.querySelectorAll("[data-quality-id]").forEach((select) => select.addEventListener("change", () => updateActionQuality(select.dataset.qualityId, select.value)));
+    
+    if (refs.quickAddButtons) {
+      refs.quickAddButtons.forEach(btn => {
+        const title = btn.dataset.templateTitle;
+        const exists = state.actions.some(a => a.title === title);
+        btn.style.display = exists ? "none" : "";
+      });
+    }
   }
 
   function renderShop() {
-    refs.shopList.innerHTML = SHOP_ITEMS.map((item) => `<article class="shop-card"><div class="shop-copy"><span class="small-label">Поддержка</span><h4>${escapeHtml(item.name)}</h4><p>${escapeHtml(item.text)}</p><div class="shop-cost">${item.cost} монет</div></div><button class="shop-action" type="button" data-shop-id="${item.id}" ${state.coins < item.cost ? "disabled" : ""}>${state.coins < item.cost ? "Не хватает монет" : "Купить"}</button></article>`).join("");
+    let itemsHtml = SHOP_ITEMS.map((item) => `<article class="shop-card"><div class="shop-copy"><span class="small-label">Поддержка</span><h4>${escapeHtml(item.name)}</h4><p>${escapeHtml(item.text)}</p><div class="shop-cost">${item.cost} монет</div></div><button class="shop-action" type="button" data-shop-id="${item.id}" ${state.coins < item.cost ? "disabled" : ""}>${state.coins < item.cost ? "Не хватает" : "Купить"}</button></article>`).join("");
+    refs.shopList.innerHTML = itemsHtml;
     refs.shopList.querySelectorAll("[data-shop-id]").forEach((button) => button.addEventListener("click", () => buyItem(button.dataset.shopId)));
   }
 
@@ -777,6 +819,28 @@
     render();
   }
 
+  // Check Daily Quests
+  function advanceQuests(type, count = 1) {
+    if(!state.dailyQuests) return;
+    let madeProgress = false;
+    state.dailyQuests.forEach(q => {
+      if (q.completed) return;
+      if (q.goalType === type || q.goalType === "any_action") {
+        q.progress += count;
+        if (q.progress >= q.targetVal) {
+          q.progress = q.targetVal;
+          q.completed = true;
+          state.coins += q.reward.coins || 0;
+          state.earnedCoins += q.reward.coins || 0;
+          state.xp += q.reward.xp || 0;
+          // show a tiny notification effect if possible
+        }
+        madeProgress = true;
+      }
+    });
+    return madeProgress;
+  }
+
   function completeAction(actionId) {
     const t = today();
     const action = state.actions.find((item) => item.id === actionId);
@@ -787,6 +851,9 @@
     state.dailyDone[t] = Math.max(0, Number(state.dailyDone[t] || 0)) + 1;
     markTodayActive();
     rewardBundle(qualityReward(action));
+    
+    advanceQuests(action.type, 1);
+    
     if (!state.profile.hatched && completedCardsToday() >= 3) {
       state.profile.hatched = true;
     }
@@ -833,6 +900,27 @@
     }
     saveState();
     render();
+  }
+
+
+  function renderQuests() {
+    const container = $("#dailyQuestsContainer");
+    if (!container || !state.dailyQuests) return;
+    if (state.dailyQuests.length === 0) {
+      container.innerHTML = `<p class="focus-copy">На сегодня особых заданий нет.</p>`;
+      return;
+    }
+    
+    container.innerHTML = state.dailyQuests.map(q => {
+      return `<article class="action-card ${q.completed ? "quest-completed" : "quest-active"}">
+        <div class="action-card-head">
+          <div><span class="action-type quest-badge">Квест</span>
+          <div class="action-copy"><h4>${escapeHtml(q.title)}</h4><p>${escapeHtml(q.text)}</p></div></div>
+          <div class="action-rank">${q.completed ? "Выполнено" : `${q.progress}/${q.targetVal}`}</div>
+        </div>
+        <div class="action-reward" style="margin-top:8px">${q.completed ? "Награда получена" : `Награда: +${q.reward.coins} монет • +${q.reward.xp} XP`}</div>
+      </article>`;
+    }).join("");
   }
 
   function syncFocusRemaining() {
@@ -898,6 +986,9 @@
     state.totalActionsDone += 1;
     markTodayActive();
     rewardBundle(preset().reward);
+    
+    advanceQuests("focus", 1);
+    
     saveState();
     render();
   }
@@ -972,6 +1063,7 @@
     renderCreature();
     renderStats();
     renderHome();
+    renderQuests();
     renderActions();
     renderShop();
     renderFocus();
