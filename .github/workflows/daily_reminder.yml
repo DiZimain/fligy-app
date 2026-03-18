@@ -2,8 +2,8 @@ name: Daily Flygy Reminders
 
 on:
   schedule:
-    # Runs at 15:00 UTC (18:00 МСК) every day
-    - cron: '0 15 * * *'
+    # Runs at 09:00 UTC (12:00 МСК) every day
+    - cron: '0 9 * * *'
   workflow_dispatch: # Allows you to manually trigger it from the "Actions" tab
 
 jobs:
