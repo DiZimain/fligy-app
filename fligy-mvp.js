@@ -7,7 +7,7 @@
   const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
   const CLIENT_KEY = "fligy.client.id.v3";
   const RANKS = ["C", "B", "A", "S", "SS", "SSS"];
-  const TODAY = dateKey();
+  function today() { return dateKey(); }
   const TG_USER = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) ? window.Telegram.WebApp.initDataUnsafe.user : null;
   const USER_ID = TG_USER ? `tg-${TG_USER.id}` : ensureClientId();
 
@@ -170,7 +170,7 @@
   function createState() {
     return {
       activeScreen: "sanctuary",
-      lastSeenDate: TODAY,
+      lastSeenDate: today(),
       updatedAt: new Date().toISOString(),
       coins: 0,
       earnedCoins: 0,
@@ -218,8 +218,8 @@
       focus: { ...base.focus, ...(raw.focus || {}) }
     };
     if (!FOCUS_PRESETS.some((preset) => preset.id === next.focus.selectedPresetId)) next.focus.selectedPresetId = "classic";
-    if (next.lastSeenDate !== TODAY) {
-      next.lastSeenDate = TODAY;
+    if (next.lastSeenDate !== today()) {
+      next.lastSeenDate = today();
       next.focus.running = false;
       next.focus.endsAt = null;
       next.focus.remainingSeconds = presetDuration(next.focus.selectedPresetId);
@@ -295,9 +295,20 @@
       if (error && error.code !== "PGRST116") throw error; // PGRST116 is "no rows found"
       
       if (data && data.state_data) {
-        state = normalize(data.state_data);
-        render();
-        console.log("Progress synced from cloud.");
+        const remote = normalize(data.state_data);
+        const remoteDate = Date.parse(remote.updatedAt || "");
+        const localDate = Date.parse(state.updatedAt || "");
+        
+        if (!Number.isNaN(remoteDate)) {
+           if (Number.isNaN(localDate) || remoteDate > localDate) {
+              state = remote;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+              render();
+              console.log("Progress synced from cloud.");
+           } else if (!Number.isNaN(localDate) && localDate > remoteDate) {
+              saveState(); // push newer local to cloud
+           }
+        }
       }
     } catch (err) {
       console.error("Cloud fetch error:", err.message);
@@ -342,7 +353,7 @@
   }
 
   function completedCardsToday() {
-    const fromLog = Number(state.dailyDone?.[TODAY] || 0);
+    const fromLog = Number(state.dailyDone?.[today()] || 0);
     if (fromLog > 0) return fromLog;
     // migration fallback for older state versions
     return state.actions.filter((action) => isDoneToday(action)).length;
@@ -408,7 +419,17 @@
       best = Math.max(best, chain);
     }
     let current = 0;
-    let cursor = new Date(`${TODAY}T00:00:00`);
+    const t = today();
+    let cursor = new Date(`${t}T00:00:00`);
+    
+    // Streak logic fix: don't reset to 0 if today hasn't been started yet but yesterday was active
+    if (!state.profile.activeDays.includes(dateKey(cursor))) {
+      cursor = new Date(cursor.getTime() - 86400000);
+      if (!state.profile.activeDays.includes(dateKey(cursor))) {
+        return { current: 0, best };
+      }
+    }
+    
     while (state.profile.activeDays.includes(dateKey(cursor))) {
       current += 1;
       cursor = new Date(cursor.getTime() - 86400000);
@@ -417,19 +438,20 @@
   }
 
   function weeklyEntries() {
+    const t = today();
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(Date.now() - (6 - index) * 86400000);
       const key = dateKey(date);
-      return { day: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][date.getDay()], state: state.profile.activeDays.includes(key) ? "done" : key === TODAY ? "alert" : "pending" };
+      return { day: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][date.getDay()], state: state.profile.activeDays.includes(key) ? "done" : key === t ? "alert" : "pending" };
     });
   }
 
   function isDoneToday(action) {
-    return action.lastCompletedOn === TODAY;
+    return action.lastCompletedOn === today();
   }
 
   function isFocusDoneToday() {
-    return state.focus.lastCompletedOn === TODAY;
+    return state.focus.lastCompletedOn === today();
   }
 
   function perfectDayReady() {
@@ -440,8 +462,9 @@
   }
 
   function markTodayActive() {
-    if (!state.profile.activeDays.includes(TODAY)) {
-      state.profile.activeDays.push(TODAY);
+    const t = today();
+    if (!state.profile.activeDays.includes(t)) {
+      state.profile.activeDays.push(t);
       state.profile.activeDays.sort();
     }
   }
@@ -537,10 +560,11 @@
   }
 
   function renderHome() {
+    const t = today();
     const doneCount = state.actions.filter((action) => isDoneToday(action)).length;
     refs.todayDoneValue.textContent = String(doneCount);
     refs.todayRemainingValue.textContent = String(Math.max(state.actions.length - doneCount, 0));
-    refs.todayActiveValue.textContent = state.profile.activeDays.includes(TODAY) ? "Да" : "Нет";
+    refs.todayActiveValue.textContent = state.profile.activeDays.includes(t) ? "Да" : "Нет";
     if (!state.actions.length) {
       refs.perfectDayStatus.textContent = "Начни с первой карточки";
       refs.perfectDayHint.textContent = "Собери под себя 2-3 реальные карточки: например спортзал, чтение и шаг по проекту.";
@@ -754,12 +778,13 @@
   }
 
   function completeAction(actionId) {
+    const t = today();
     const action = state.actions.find((item) => item.id === actionId);
     if (!action || isDoneToday(action)) return;
-    action.lastCompletedOn = TODAY;
+    action.lastCompletedOn = t;
     action.progress += 1;
     state.totalActionsDone += 1;
-    state.dailyDone[TODAY] = Math.max(0, Number(state.dailyDone[TODAY] || 0)) + 1;
+    state.dailyDone[t] = Math.max(0, Number(state.dailyDone[t] || 0)) + 1;
     markTodayActive();
     rewardBundle(qualityReward(action));
     if (!state.profile.hatched && completedCardsToday() >= 3) {
@@ -869,7 +894,7 @@
     state.focus.endsAt = null;
     state.focus.remainingSeconds = presetDuration(state.focus.selectedPresetId);
     state.focus.completedSessions += 1;
-    state.focus.lastCompletedOn = TODAY;
+    state.focus.lastCompletedOn = today();
     state.totalActionsDone += 1;
     markTodayActive();
     rewardBundle(preset().reward);
